@@ -4,12 +4,18 @@
 from dotenv import load_dotenv
 import requests
 import os
+import datetime as dt
 from pprint import pprint
 
 load_dotenv()
 amadeus_url = "https://test.api.amadeus.com/v1"
 get_token_url = f"{amadeus_url}/security/oauth2/token"
 get_code_url = f"{amadeus_url}/reference-data/locations/cities"
+
+now = dt.datetime.now()
+
+flight_date = now + dt.timedelta(days=100)
+flight_date_str = flight_date.strftime("%Y-%m-%d")
 
 
 class FlightSearch:
@@ -47,4 +53,24 @@ class FlightSearch:
             print(f"KeyError: no airport found for {city}")
             return "N/A"
         return code
+
+    def get_price(self, city_code, original_location_code):
+        header = {"Authorization": f"Bearer {self._api_token}"}
+        params = {
+            "originLocationCode": original_location_code,
+            "destinationLocationCode": city_code,
+            # "departureDate": flight_date_str,
+            "departureDate": "2024-10-10",
+            "adults": 1,
+        }
+        print("https://test.api.amadeus.com/v2/shopping/flight-offers", params, header)
+        try:
+            response = requests.get(url="https://test.api.amadeus.com/v2/shopping/flight-offers", params=params,
+                                    headers=header)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                return {"data": []}
+        except KeyError:
+            return {"data": []}
 
